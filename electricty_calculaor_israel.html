@@ -1,0 +1,2074 @@
+
+                        <!DOCTYPE html>
+                        <html lang="en">
+                        <head>
+                            <meta charset="UTF-8">
+                            <meta name="viewport" content="width=device-width, initial-scale=1.0">
+							<style>
+								body {
+									background-color: white; /* Ensure the iframe has a white background */
+								}
+
+								
+							</style>
+                        </head>
+                        <body>
+                            <!DOCTYPE html>
+<!--
+  ╔══════════════════════════════════════════════════════════════════╗
+  ║  מחשבון חיסכון בחשמל — Enterprise Edition v3.0                 ║
+  ║  UI/UX: Premium redesign (Tesla/Google/Apple inspired)          ║
+  ║  Security: XSS hardening, CSP, input sanitization              ║
+  ║  Data Viz: Chart.js bar comparison                              ║
+  ╚══════════════════════════════════════════════════════════════════╝
+-->
+<html dir="rtl" lang="he">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="השווה מסלולי חשמל וגלה כמה תחסוך בשנה — ניתוח אישי מקובץ מחברת החשמל">
+
+  <!-- ═══════════════════════════════════════════════════════════
+       SECURITY: Content Security Policy
+  ═══════════════════════════════════════════════════════════ -->
+  <meta http-equiv="Content-Security-Policy"
+        content="default-src 'self';
+                 script-src 'self' https://cdnjs.cloudflare.com https://cdn.jsdelivr.net 'unsafe-inline';
+                 style-src 'self' https://fonts.googleapis.com 'unsafe-inline';
+                 font-src https://fonts.gstatic.com;
+                 img-src 'self' data:;
+                 connect-src 'none';
+                 object-src 'none';
+                 base-uri 'self';">
+
+  <meta http-equiv="X-Frame-Options" content="DENY">
+  <meta http-equiv="X-Content-Type-Options" content="nosniff">
+  <meta http-equiv="Referrer-Policy" content="no-referrer">
+
+  <title>מחשבון חיסכון בחשמל | השוואת מסלולים</title>
+
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.3.2/papaparse.min.js"
+          integrity="sha512-SGWgwwRA8xZgEoKiex3UubkSkV1zSE1BS6O4pXcaxcNtUlQsOmOmhVnDwIvqGRfEmuz83tIGL13cXMZn6upPyg=="
+          crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"
+          crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+
+  <style>
+    /* ═══════════════════════════════════════════════════════════
+       DESIGN SYSTEM — CSS Custom Properties
+    ═══════════════════════════════════════════════════════════ */
+    :root {
+      /* Brand Colors */
+      --primary:       #0057FF;
+      --primary-dark:  #0041CC;
+      --primary-light: #EEF3FF;
+      --accent:        #00C853;
+      --accent-dark:   #009624;
+      --accent-light:  #E8FAF0;
+      --warning:       #FF9100;
+      --warning-light: #FFF3E0;
+      --danger:        #D32F2F;
+
+      /* Neutrals */
+      --surface:       #FFFFFF;
+      --bg:            #F3F6FB;
+      --bg-deep:       #E8EDF5;
+      --border:        #E2E8F0;
+      --border-strong: #CBD5E1;
+
+      /* Text */
+      --text-primary:   #0F172A;
+      --text-secondary: #475569;
+      --text-muted:     #94A3B8;
+      --text-on-dark:   #FFFFFF;
+
+      /* Shadows */
+      --shadow-sm:  0 1px 3px rgba(0,0,0,.06), 0 1px 2px rgba(0,0,0,.04);
+      --shadow-md:  0 4px 16px rgba(0,0,0,.08), 0 2px 6px rgba(0,0,0,.04);
+      --shadow-lg:  0 10px 40px rgba(0,0,0,.10), 0 4px 12px rgba(0,0,0,.05);
+      --shadow-glow: 0 0 0 3px rgba(0,87,255,.18);
+
+      /* Spacing */
+      --space-xs:  4px;
+      --space-sm:  8px;
+      --space-md:  16px;
+      --space-lg:  24px;
+      --space-xl:  32px;
+      --space-2xl: 48px;
+
+      /* Radius */
+      --radius-sm:   6px;
+      --radius-md:   12px;
+      --radius-lg:   18px;
+      --radius-xl:   24px;
+      --radius-pill: 999px;
+
+      /* Transitions */
+      --transition-fast: 150ms cubic-bezier(0.4,0,0.2,1);
+      --transition-mid:  250ms cubic-bezier(0.4,0,0.2,1);
+      --transition-slow: 400ms cubic-bezier(0.4,0,0.2,1);
+
+      /* Typography */
+      --font-body: 'Inter', system-ui, -apple-system, sans-serif;
+    }
+
+    /* ═══════════════════════════════════════════════════════════
+       RESET & BASE
+    ═══════════════════════════════════════════════════════════ */
+    *, *::before, *::after {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    html {
+      scroll-behavior: smooth;
+      -webkit-text-size-adjust: 100%;
+    }
+
+    body {
+      font-family: var(--font-body);
+      background: var(--bg);
+      color: var(--text-primary);
+      min-height: 100vh;
+      line-height: 1.6;
+      -webkit-font-smoothing: antialiased;
+    }
+
+    /* Accessibility — focus ring */
+    :focus-visible {
+      outline: 2px solid var(--primary);
+      outline-offset: 2px;
+      border-radius: var(--radius-sm);
+    }
+
+    /* ═══════════════════════════════════════════════════════════
+       SKIP LINK
+    ═══════════════════════════════════════════════════════════ */
+    .skip-link {
+      position: absolute;
+      top: -40px;
+      right: 0;
+      background: var(--primary);
+      color: #fff;
+      padding: 8px 16px;
+      border-radius: 0 0 var(--radius-sm) var(--radius-sm);
+      font-size: 14px;
+      font-weight: 600;
+      z-index: 9999;
+      transition: top var(--transition-fast);
+    }
+    .skip-link:focus { top: 0; }
+
+    /* ═══════════════════════════════════════════════════════════
+       HEADER / HERO
+    ═══════════════════════════════════════════════════════════ */
+    .app-header {
+      background: linear-gradient(135deg, #050E2D 0%, #0A1F5C 60%, #0D2B7A 100%);
+      padding: var(--space-2xl) var(--space-md) 5rem;
+      text-align: center;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .app-header::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background-image:
+        linear-gradient(rgba(0,87,255,.06) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(0,87,255,.06) 1px, transparent 1px);
+      background-size: 40px 40px;
+      pointer-events: none;
+    }
+
+    .app-header::after {
+      content: '';
+      position: absolute;
+      top: 0; left: 0; right: 0;
+      height: 3px;
+      background: linear-gradient(90deg, transparent, var(--primary), var(--accent), var(--primary), transparent);
+    }
+
+    .header__inner {
+      position: relative;
+      z-index: 1;
+      max-width: 560px;
+      margin: 0 auto;
+    }
+
+    .header__badge {
+      display: inline-flex;
+      align-items: center;
+      gap: var(--space-sm);
+      background: rgba(255,255,255,.08);
+      border: 1px solid rgba(255,255,255,.12);
+      border-radius: var(--radius-pill);
+      padding: 6px 16px;
+      margin-bottom: var(--space-lg);
+      font-size: 12px;
+      font-weight: 600;
+      color: rgba(255,255,255,.8);
+      letter-spacing: .04em;
+      text-transform: uppercase;
+    }
+
+    .header__badge-dot {
+      width: 6px; height: 6px;
+      border-radius: 50%;
+      background: var(--accent);
+      box-shadow: 0 0 6px var(--accent);
+      animation: pulse 2s ease-in-out infinite;
+    }
+
+    @keyframes pulse {
+      0%, 100% { opacity: 1; transform: scale(1); }
+      50% { opacity: .6; transform: scale(1.3); }
+    }
+
+    .header__icon {
+      width: 64px; height: 64px;
+      background: rgba(0,87,255,.2);
+      border: 1px solid rgba(0,87,255,.4);
+      border-radius: var(--radius-lg);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin: 0 auto var(--space-md);
+      font-size: 30px;
+    }
+
+    .header__title {
+      font-size: clamp(26px, 5vw, 38px);
+      font-weight: 800;
+      color: #fff;
+      line-height: 1.2;
+      margin-bottom: var(--space-sm);
+      letter-spacing: -.02em;
+    }
+
+    .header__title span {
+      color: var(--accent);
+    }
+
+    .header__subtitle {
+      font-size: 16px;
+      color: rgba(255,255,255,.65);
+      max-width: 420px;
+      margin: 0 auto var(--space-xl);
+      line-height: 1.7;
+      font-weight: 400;
+    }
+
+    .header__features {
+      display: flex;
+      justify-content: center;
+      gap: var(--space-sm);
+      flex-wrap: wrap;
+    }
+
+    .feature-pill {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      background: rgba(255,255,255,.07);
+      border: 1px solid rgba(255,255,255,.1);
+      border-radius: var(--radius-pill);
+      padding: 6px 14px;
+      font-size: 12px;
+      font-weight: 500;
+      color: rgba(255,255,255,.75);
+    }
+
+    .feature-pill__icon {
+      font-size: 12px;
+    }
+
+    /* ═══════════════════════════════════════════════════════════
+       MAIN LAYOUT
+    ═══════════════════════════════════════════════════════════ */
+    .app-main {
+      max-width: 680px;
+      margin: -2.5rem auto 0;
+      padding: 0 var(--space-md) var(--space-2xl);
+      position: relative;
+      z-index: 2;
+    }
+
+    /* ═══════════════════════════════════════════════════════════
+       CARD
+    ═══════════════════════════════════════════════════════════ */
+    .card {
+      background: var(--surface);
+      border-radius: var(--radius-xl);
+      box-shadow: var(--shadow-lg);
+      border: 1px solid var(--border);
+      overflow: hidden;
+    }
+
+    .card + .card,
+    .card + .guide-card {
+      margin-top: var(--space-md);
+    }
+
+    /* ═══════════════════════════════════════════════════════════
+       UPLOAD SECTION
+    ═══════════════════════════════════════════════════════════ */
+    .upload-section {
+      padding: var(--space-xl) var(--space-xl);
+    }
+
+    .upload-section__label {
+      font-size: 11px;
+      font-weight: 700;
+      color: var(--text-muted);
+      text-transform: uppercase;
+      letter-spacing: .08em;
+      margin-bottom: var(--space-md);
+      display: block;
+    }
+
+    .drop-zone {
+      border: 2px dashed var(--border-strong);
+      border-radius: var(--radius-lg);
+      padding: var(--space-2xl) var(--space-lg);
+      text-align: center;
+      cursor: pointer;
+      transition:
+        border-color var(--transition-mid),
+        background var(--transition-mid),
+        transform var(--transition-fast);
+      background: var(--bg);
+      position: relative;
+    }
+
+    .drop-zone:hover {
+      border-color: var(--primary);
+      background: var(--primary-light);
+      transform: translateY(-1px);
+    }
+
+    .drop-zone.drop-zone--over {
+      border-color: var(--primary);
+      background: var(--primary-light);
+      box-shadow: var(--shadow-glow);
+    }
+
+    .drop-zone__icon {
+      width: 52px; height: 52px;
+      background: var(--primary-light);
+      border: 1px solid rgba(0,87,255,.15);
+      border-radius: var(--radius-md);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin: 0 auto var(--space-md);
+      font-size: 22px;
+    }
+
+    .drop-zone__title {
+      font-size: 15px;
+      font-weight: 600;
+      color: var(--text-primary);
+      margin-bottom: var(--space-xs);
+    }
+
+    .drop-zone__subtitle {
+      font-size: 13px;
+      color: var(--text-muted);
+      margin-bottom: var(--space-lg);
+    }
+
+    .drop-zone__filename {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      margin-top: var(--space-md);
+      font-size: 13px;
+      color: var(--accent-dark);
+      font-weight: 600;
+      background: var(--accent-light);
+      padding: 4px 12px;
+      border-radius: var(--radius-pill);
+    }
+
+    input[type="file"] { display: none; }
+
+    /* ═══════════════════════════════════════════════════════════
+       BUTTONS
+    ═══════════════════════════════════════════════════════════ */
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: var(--space-sm);
+      padding: 11px 24px;
+      border-radius: var(--radius-md);
+      font-family: var(--font-body);
+      font-size: 14px;
+      font-weight: 600;
+      cursor: pointer;
+      transition:
+        background var(--transition-fast),
+        transform var(--transition-fast),
+        box-shadow var(--transition-fast);
+      border: none;
+      text-decoration: none;
+      white-space: nowrap;
+    }
+
+    .btn:active { transform: scale(.97); }
+
+    .btn--primary {
+      background: var(--primary);
+      color: #fff;
+      box-shadow: 0 2px 8px rgba(0,87,255,.3);
+    }
+    .btn--primary:hover {
+      background: var(--primary-dark);
+      box-shadow: 0 4px 16px rgba(0,87,255,.35);
+    }
+
+    .btn--ghost {
+      background: transparent;
+      color: var(--primary);
+      border: 1.5px solid var(--primary);
+    }
+    .btn--ghost:hover { background: var(--primary-light); }
+
+    .btn--ghost-danger {
+      background: transparent;
+      color: var(--danger);
+      border: 1.5px solid rgba(211,47,47,.3);
+      border-radius: var(--radius-sm);
+      padding: 6px 10px;
+      font-size: 12px;
+    }
+    .btn--ghost-danger:hover { background: #FFEBEE; }
+
+    .btn--accent {
+      background: var(--accent);
+      color: #fff;
+      box-shadow: 0 2px 8px rgba(0,200,83,.3);
+    }
+    .btn--accent:hover {
+      background: var(--accent-dark);
+    }
+
+    .btn--sm { padding: 8px 14px; font-size: 12px; }
+    .btn--full { width: 100%; }
+
+    /* ═══════════════════════════════════════════════════════════
+       PROGRESS BAR
+    ═══════════════════════════════════════════════════════════ */
+    .progress-wrap {
+      height: 3px;
+      background: var(--border);
+      overflow: hidden;
+      display: none;
+    }
+
+    .progress-bar {
+      height: 100%;
+      background: linear-gradient(90deg, var(--primary), var(--accent));
+      transition: width .35s ease;
+      width: 0%;
+    }
+
+    @keyframes shimmer {
+      0% { background-position: -200% 0; }
+      100% { background-position: 200% 0; }
+    }
+
+    .analyzing {
+      padding: var(--space-lg);
+      text-align: center;
+      display: none;
+    }
+
+    .analyzing__spinner {
+      width: 36px; height: 36px;
+      border: 3px solid var(--border);
+      border-top-color: var(--primary);
+      border-radius: 50%;
+      animation: spin .8s linear infinite;
+      margin: 0 auto var(--space-sm);
+    }
+
+    @keyframes spin {
+      to { transform: rotate(360deg); }
+    }
+
+    .analyzing__text {
+      font-size: 14px;
+      font-weight: 500;
+      color: var(--text-secondary);
+    }
+
+    /* ═══════════════════════════════════════════════════════════
+       RESULTS SECTION
+    ═══════════════════════════════════════════════════════════ */
+    .results { display: none; }
+
+    /* ═══════════════════════════════════════════════════════════
+       CUSTOM PLAN BOX
+    ═══════════════════════════════════════════════════════════ */
+    .custom-plan {
+      padding: var(--space-lg) var(--space-xl);
+      background: var(--primary-light);
+      border-bottom: 1px solid rgba(0,87,255,.1);
+    }
+
+    .custom-plan__header {
+      display: flex;
+      align-items: center;
+      gap: var(--space-sm);
+      margin-bottom: var(--space-md);
+    }
+
+    .custom-plan__icon {
+      width: 28px; height: 28px;
+      background: var(--primary);
+      border-radius: var(--radius-sm);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 14px;
+      flex-shrink: 0;
+    }
+
+    .custom-plan__title {
+      font-size: 14px;
+      font-weight: 700;
+      color: var(--primary-dark);
+    }
+
+    .custom-plan__subtitle {
+      font-size: 12px;
+      color: var(--text-secondary);
+      margin-top: 1px;
+    }
+
+    .rule-row {
+      display: grid;
+      grid-template-columns: 0.7fr 1.2fr 1fr 1fr auto;
+      gap: var(--space-sm);
+      align-items: end;
+      background: var(--surface);
+      border: 1px solid rgba(0,87,255,.15);
+      border-radius: var(--radius-md);
+      padding: var(--space-md);
+      margin-bottom: var(--space-sm);
+    }
+
+    .rule-row__field label {
+      display: block;
+      font-size: 10px;
+      font-weight: 700;
+      color: var(--text-secondary);
+      text-transform: uppercase;
+      letter-spacing: .06em;
+      margin-bottom: 4px;
+    }
+
+    .rule-row__field input,
+    .rule-row__field select {
+      width: 100%;
+      padding: 8px 10px;
+      border: 1px solid var(--border-strong);
+      border-radius: var(--radius-sm);
+      font-family: var(--font-body);
+      font-size: 13px;
+      color: var(--text-primary);
+      background: var(--surface);
+      transition: border-color var(--transition-fast), box-shadow var(--transition-fast);
+      outline: none;
+      appearance: auto;
+    }
+
+    .rule-row__field input[type="time"] {
+      direction: ltr;
+      text-align: center;
+    }
+
+    .rule-row__field input:focus,
+    .rule-row__field select:focus {
+      border-color: var(--primary);
+      box-shadow: 0 0 0 3px rgba(0,87,255,.1);
+    }
+
+    .rule-row__field input.input--invalid {
+      border-color: var(--danger);
+      box-shadow: 0 0 0 3px rgba(211,47,47,.1);
+    }
+
+    .custom-plan__actions {
+      display: flex;
+      gap: var(--space-sm);
+      margin-top: var(--space-sm);
+    }
+
+    @media (max-width: 540px) {
+      .rule-row { grid-template-columns: 1fr 1fr; }
+      .rule-row__field:last-of-type { grid-column: span 2; }
+    }
+
+    /* ═══════════════════════════════════════════════════════════
+       WINNER BANNER
+    ═══════════════════════════════════════════════════════════ */
+    .winner-banner {
+      padding: var(--space-xl);
+      background: linear-gradient(135deg, #052E1A 0%, #0A4F2D 100%);
+      position: relative;
+      overflow: hidden;
+    }
+
+    .winner-banner::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background-image:
+        linear-gradient(rgba(0,200,83,.04) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(0,200,83,.04) 1px, transparent 1px);
+      background-size: 24px 24px;
+    }
+
+    .winner-banner__inner {
+      position: relative;
+      z-index: 1;
+    }
+
+    .winner-banner__badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      background: rgba(0,200,83,.15);
+      border: 1px solid rgba(0,200,83,.3);
+      border-radius: var(--radius-pill);
+      padding: 4px 12px;
+      font-size: 11px;
+      font-weight: 700;
+      color: var(--accent);
+      letter-spacing: .05em;
+      text-transform: uppercase;
+      margin-bottom: var(--space-md);
+    }
+
+    .winner-banner__name {
+      font-size: clamp(18px, 4vw, 24px);
+      font-weight: 800;
+      color: #fff;
+      margin-bottom: var(--space-md);
+      line-height: 1.3;
+    }
+
+    .winner-banner__stats {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: var(--space-sm);
+    }
+
+    .stat-card {
+      background: rgba(255,255,255,.07);
+      border: 1px solid rgba(255,255,255,.1);
+      border-radius: var(--radius-md);
+      padding: var(--space-md);
+    }
+
+    .stat-card__label {
+      font-size: 11px;
+      color: rgba(255,255,255,.55);
+      font-weight: 500;
+      margin-bottom: 4px;
+    }
+
+    .stat-card__value {
+      font-size: 22px;
+      font-weight: 800;
+      color: var(--accent);
+      line-height: 1;
+    }
+
+    .stat-card__unit {
+      font-size: 12px;
+      font-weight: 500;
+      color: rgba(255,255,255,.5);
+      margin-top: 4px;
+    }
+
+    /* ═══════════════════════════════════════════════════════════
+       CHART SECTION
+    ═══════════════════════════════════════════════════════════ */
+    .chart-section {
+      padding: var(--space-xl);
+      border-bottom: 1px solid var(--border);
+    }
+
+    .section-title {
+      font-size: 11px;
+      font-weight: 700;
+      color: var(--text-muted);
+      text-transform: uppercase;
+      letter-spacing: .08em;
+      margin-bottom: var(--space-lg);
+      display: flex;
+      align-items: center;
+      gap: var(--space-sm);
+    }
+
+    .section-title::after {
+      content: '';
+      flex: 1;
+      height: 1px;
+      background: var(--border);
+    }
+
+    .chart-wrapper {
+      position: relative;
+      height: 220px;
+    }
+
+    /* ═══════════════════════════════════════════════════════════
+       PLANS LIST
+    ═══════════════════════════════════════════════════════════ */
+    .plans-section {
+      padding: var(--space-xl);
+    }
+
+    .plan-item {
+      display: flex;
+      align-items: center;
+      gap: var(--space-md);
+      padding: var(--space-md) 0;
+      border-bottom: 1px solid var(--border);
+      transition: background var(--transition-fast);
+    }
+
+    .plan-item:last-child { border-bottom: none; }
+
+    .plan-item--winner {
+      margin: 0 calc(-1 * var(--space-xl));
+      padding-right: var(--space-xl);
+      padding-left: var(--space-xl);
+      background: var(--accent-light);
+      border-radius: var(--radius-md);
+      border-bottom: 1px solid rgba(0,200,83,.2);
+    }
+
+    .plan-item--custom {
+      background: var(--warning-light);
+      margin: 0 calc(-1 * var(--space-xl));
+      padding-right: var(--space-xl);
+      padding-left: var(--space-xl);
+      border-radius: var(--radius-md);
+    }
+
+    .plan-rank {
+      width: 30px; height: 30px;
+      border-radius: 50%;
+      background: var(--bg);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 12px;
+      font-weight: 800;
+      color: var(--text-muted);
+      flex-shrink: 0;
+      border: 1.5px solid var(--border);
+    }
+
+    .plan-rank--1 {
+      background: #FFF8E1;
+      color: #B45309;
+      border-color: #F5D87A;
+    }
+    .plan-rank--2 {
+      background: #F3F4F6;
+      color: #374151;
+      border-color: #D1D5DB;
+    }
+    .plan-rank--3 {
+      background: #FDF3E7;
+      color: #92400E;
+      border-color: #FCD4A0;
+    }
+
+    .plan-info {
+      flex: 1;
+      min-width: 0;
+    }
+
+    .plan-name {
+      font-size: 13px;
+      font-weight: 600;
+      color: var(--text-primary);
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      margin-bottom: 6px;
+    }
+
+    .plan-bar-track {
+      height: 5px;
+      background: var(--bg-deep);
+      border-radius: var(--radius-pill);
+      overflow: hidden;
+    }
+
+    .plan-bar-fill {
+      height: 5px;
+      border-radius: var(--radius-pill);
+      background: var(--primary);
+      transition: width .9s cubic-bezier(0.4,0,0.2,1);
+      width: 0%;
+    }
+
+    .plan-bar-fill--winner { background: var(--accent); }
+    .plan-bar-fill--custom { background: var(--warning); }
+
+    .plan-savings {
+      text-align: left;
+      flex-shrink: 0;
+      min-width: 80px;
+    }
+
+    .plan-savings__nis {
+      font-size: 16px;
+      font-weight: 800;
+      color: var(--text-primary);
+      line-height: 1;
+    }
+
+    .plan-savings__kwh {
+      font-size: 11px;
+      color: var(--text-muted);
+      margin-top: 3px;
+    }
+
+    /* ═══════════════════════════════════════════════════════════
+       FOOTER NOTE & RESET
+    ═══════════════════════════════════════════════════════════ */
+    .results-footer {
+      padding: var(--space-md) var(--space-xl);
+      background: var(--bg);
+      border-top: 1px solid var(--border);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: var(--space-md);
+      flex-wrap: wrap;
+    }
+
+    .results-footer__note {
+      font-size: 11px;
+      color: var(--text-muted);
+      line-height: 1.5;
+      flex: 1;
+    }
+
+    /* ═══════════════════════════════════════════════════════════
+       HOW IT WORKS
+    ═══════════════════════════════════════════════════════════ */
+    .how-card {
+      background: var(--surface);
+      border-radius: var(--radius-xl);
+      box-shadow: var(--shadow-md);
+      border: 1px solid var(--border);
+      padding: var(--space-xl);
+      margin-top: var(--space-md);
+    }
+
+    .how-steps {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: var(--space-md);
+      margin-top: var(--space-lg);
+    }
+
+    .how-step {
+      text-align: center;
+      padding: var(--space-md) var(--space-sm);
+      background: var(--bg);
+      border-radius: var(--radius-md);
+      border: 1px solid var(--border);
+      transition: transform var(--transition-mid), box-shadow var(--transition-mid);
+    }
+
+    .how-step:hover {
+      transform: translateY(-2px);
+      box-shadow: var(--shadow-sm);
+    }
+
+    .how-step__num {
+      width: 32px; height: 32px;
+      border-radius: 50%;
+      background: var(--primary);
+      color: #fff;
+      font-size: 14px;
+      font-weight: 700;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin: 0 auto var(--space-sm);
+    }
+
+    .how-step__text {
+      font-size: 12px;
+      color: var(--text-secondary);
+      line-height: 1.5;
+      font-weight: 500;
+    }
+
+    /* ═══════════════════════════════════════════════════════════
+       GUIDE ACCORDION
+    ═══════════════════════════════════════════════════════════ */
+    .guide-card {
+      background: var(--surface);
+      border-radius: var(--radius-xl);
+      box-shadow: var(--shadow-md);
+      border: 1px solid var(--border);
+      overflow: hidden;
+      margin-top: var(--space-md);
+    }
+
+    .guide-toggle {
+      width: 100%;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: var(--space-lg) var(--space-xl);
+      background: transparent;
+      border: none;
+      cursor: pointer;
+      font-family: var(--font-body);
+      transition: background var(--transition-fast);
+      text-align: right;
+    }
+
+    .guide-toggle:hover { background: var(--bg); }
+
+    .guide-toggle__left {
+      display: flex;
+      align-items: center;
+      gap: var(--space-md);
+    }
+
+    .guide-toggle__icon-wrap {
+      width: 40px; height: 40px;
+      background: var(--warning-light);
+      border: 1px solid rgba(255,145,0,.2);
+      border-radius: var(--radius-md);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 18px;
+      flex-shrink: 0;
+    }
+
+    .guide-toggle__title {
+      font-size: 15px;
+      font-weight: 700;
+      color: var(--text-primary);
+    }
+
+    .guide-toggle__sub {
+      font-size: 12px;
+      color: var(--text-muted);
+      margin-top: 2px;
+    }
+
+    .guide-toggle__chevron {
+      font-size: 20px;
+      color: var(--text-muted);
+      transition: transform var(--transition-mid);
+      line-height: 1;
+    }
+
+    .guide-toggle[aria-expanded="true"] .guide-toggle__chevron {
+      transform: rotate(90deg);
+    }
+
+    .guide-body {
+      display: none;
+      padding: 0 var(--space-xl) var(--space-xl);
+      border-top: 1px solid var(--border);
+    }
+
+    .guide-body.guide-body--open { display: block; }
+
+    .guide-step-list {
+      display: flex;
+      flex-direction: column;
+      gap: var(--space-xl);
+      padding-top: var(--space-xl);
+    }
+
+    .guide-step {
+      display: flex;
+      gap: var(--space-md);
+      align-items: flex-start;
+    }
+
+    .guide-step__num {
+      width: 30px; height: 30px;
+      border-radius: 50%;
+      background: var(--primary);
+      color: #fff;
+      font-size: 13px;
+      font-weight: 700;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+      margin-top: 2px;
+    }
+
+    .guide-step__body { flex: 1; }
+
+    .guide-step__title {
+      font-size: 14px;
+      font-weight: 700;
+      color: var(--text-primary);
+      margin-bottom: 4px;
+    }
+
+    .guide-step__desc {
+      font-size: 13px;
+      color: var(--text-secondary);
+      line-height: 1.6;
+      margin-bottom: var(--space-sm);
+    }
+
+    .guide-mockup {
+      background: var(--bg);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-md);
+      padding: var(--space-md);
+    }
+
+    .mockup-bar {
+      display: flex;
+      gap: 4px;
+      margin-bottom: var(--space-sm);
+    }
+
+    .mockup-dot {
+      width: 8px; height: 8px;
+      border-radius: 50%;
+    }
+
+    .mockup-url {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-sm);
+      padding: 5px 10px;
+      font-size: 11px;
+      color: var(--primary);
+      font-family: monospace;
+      margin-bottom: var(--space-sm);
+      display: block;
+      text-decoration: none;
+      transition: background var(--transition-fast), border-color var(--transition-fast);
+    }
+
+    .mockup-url:hover {
+      background: var(--primary-light);
+      border-color: var(--primary);
+    }
+
+    .mockup-row {
+      display: flex;
+      align-items: center;
+      gap: var(--space-sm);
+      padding: 7px 10px;
+      background: var(--surface);
+      border-radius: var(--radius-sm);
+      border: 1px solid var(--border);
+      margin-bottom: 4px;
+      font-size: 12px;
+      color: var(--text-primary);
+    }
+
+    .mockup-row--active {
+      border-color: var(--primary);
+      background: var(--primary-light);
+      font-weight: 600;
+      color: var(--primary);
+    }
+
+    .mockup-btn {
+      display: inline-block;
+      background: #1a2e5a;
+      color: #fff;
+      padding: 6px 16px;
+      border-radius: var(--radius-pill);
+      font-size: 11px;
+      font-weight: 700;
+      margin-top: var(--space-sm);
+    }
+
+    .mockup-tab-row {
+      display: flex;
+      gap: 6px;
+      margin-bottom: var(--space-sm);
+    }
+
+    .mockup-tab {
+      padding: 5px 12px;
+      border-radius: var(--radius-pill);
+      font-size: 11px;
+      font-weight: 600;
+      background: var(--bg-deep);
+      color: var(--text-muted);
+    }
+
+    .mockup-tab--active {
+      background: var(--primary);
+      color: #fff;
+    }
+
+    .mockup-chart-bars {
+      display: flex;
+      align-items: flex-end;
+      gap: 4px;
+      height: 44px;
+      margin-bottom: 4px;
+    }
+
+    .mockup-bar-col {
+      border-radius: 3px 3px 0 0;
+      background: #C4B5FD;
+      width: 14px;
+      transition: height .3s ease;
+    }
+
+    .mockup-bar-col--hi { background: #7C3AED; }
+
+    .mockup-download {
+      display: flex;
+      align-items: center;
+      gap: var(--space-sm);
+      padding: var(--space-sm) var(--space-md);
+      background: var(--accent-light);
+      border: 1px solid var(--accent);
+      border-radius: var(--radius-sm);
+      font-size: 12px;
+      font-weight: 600;
+      color: var(--accent-dark);
+      margin-top: var(--space-sm);
+    }
+
+    /* ═══════════════════════════════════════════════════════════
+       APP FOOTER
+    ═══════════════════════════════════════════════════════════ */
+    .app-footer {
+      text-align: center;
+      padding: var(--space-xl) var(--space-md);
+      font-size: 12px;
+      color: var(--text-muted);
+      border-top: 1px solid var(--border);
+      margin-top: var(--space-xl);
+    }
+
+    .security-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+      font-size: 11px;
+      color: var(--accent-dark);
+      background: var(--accent-light);
+      padding: 4px 10px;
+      border-radius: var(--radius-pill);
+      margin-top: var(--space-sm);
+    }
+
+    /* ═══════════════════════════════════════════════════════════
+       RESPONSIVE
+    ═══════════════════════════════════════════════════════════ */
+    @media (max-width: 540px) {
+      .app-header { padding: var(--space-xl) var(--space-md) 4rem; }
+      .upload-section { padding: var(--space-lg); }
+      .winner-banner { padding: var(--space-lg); }
+      .chart-section,
+      .plans-section { padding: var(--space-lg); }
+      .results-footer { flex-direction: column; align-items: flex-start; }
+      .how-steps { grid-template-columns: 1fr; }
+      .winner-banner__stats { grid-template-columns: 1fr 1fr; }
+      .guide-toggle { padding: var(--space-md) var(--space-lg); }
+      .guide-body { padding: 0 var(--space-lg) var(--space-lg); }
+    }
+  </style>
+</head>
+<body>
+
+  <a class="skip-link" href="#main-content">דלג לתוכן הראשי</a>
+
+  <!-- HERO HEADER -->
+  <header class="app-header" role="banner">
+    <div class="header__inner">
+      <div class="header__badge" aria-hidden="true">
+        <span class="header__badge-dot"></span>
+        מעודכן לשנת 2026
+      </div>
+      <div class="header__icon" aria-hidden="true">⚡</div>
+      <h1 class="header__title">
+        גלה כמה תחסוך<br><span>בחשבון החשמל</span>
+      </h1>
+      <p class="header__subtitle">
+        העלה את קובץ הצריכה שלך מחברת החשמל וקבל השוואה אישית מדויקת בין כל ספקי החשמל
+      </p>
+      <div class="header__features" role="list">
+        <div class="feature-pill" role="listitem">
+          <span class="feature-pill__icon">🔒</span> נתונים מקומיים בלבד
+        </div>
+        <div class="feature-pill" role="listitem">
+          <span class="feature-pill__icon">⚡</span> 10 מסלולים מובנים
+        </div>
+        <div class="feature-pill" role="listitem">
+          <span class="feature-pill__icon">📊</span> ניתוח גרפי מלא
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <!-- MAIN CONTENT -->
+  <main class="app-main" id="main-content">
+
+    <!-- Upload Card -->
+    <div class="card" role="region" aria-label="העלאת קובץ צריכה">
+      <div class="upload-section" id="uploadArea">
+        <span class="upload-section__label">שלב 1 — העלאת קובץ</span>
+        <div class="drop-zone"
+             id="dropZone"
+             role="button"
+             tabindex="0"
+             aria-label="גרור קובץ CSV לכאן או לחץ לבחירת קובץ"
+             aria-describedby="dropHint">
+          <div class="drop-zone__icon" aria-hidden="true">📂</div>
+          <div class="drop-zone__title">גרור קובץ CSV לכאן</div>
+          <p class="drop-zone__subtitle" id="dropHint">
+            חברת החשמל — CSV בלבד, עד 10MB
+          </p>
+          <button class="btn btn--primary"
+                  type="button"
+                  onclick="document.getElementById('fileInput').click()"
+                  aria-controls="fileInput">
+            בחר קובץ מהמכשיר
+          </button>
+          <div class="drop-zone__filename" id="fname" role="status" aria-live="polite" style="display:none"></div>
+          <input type="file"
+                 id="fileInput"
+                 accept=".csv,text/csv"
+                 aria-label="בחר קובץ CSV">
+        </div>
+      </div>
+
+      <!-- Progress -->
+      <div class="progress-wrap" id="pw" role="progressbar" aria-valuemin="0" aria-valuemax="100">
+        <div class="progress-bar" id="pb"></div>
+      </div>
+
+      <!-- Analyzing state -->
+      <div class="analyzing" id="analyzing" role="status" aria-live="polite">
+        <div class="analyzing__spinner" aria-hidden="true"></div>
+        <div class="analyzing__text">מנתח את נתוני הצריכה שלך...</div>
+      </div>
+
+      <!-- RESULTS -->
+      <section class="results" id="results" aria-label="תוצאות השוואת מסלולים">
+
+        <!-- Custom Plan Builder -->
+        <div class="custom-plan" id="customPlanBox">
+          <div class="custom-plan__header">
+            <div class="custom-plan__icon" aria-hidden="true">✏️</div>
+            <div>
+              <div class="custom-plan__title">בדוק הצעה אישית</div>
+              <div class="custom-plan__subtitle">הכנס פרטי הנחה כדי להשוות מסלול מותאם</div>
+            </div>
+          </div>
+          <div id="customRulesContainer" role="list" aria-label="טווחי שעות מותאמים אישית"></div>
+          <div class="custom-plan__actions">
+            <button class="btn btn--ghost btn--sm"
+                    type="button"
+                    id="btnAddRule"
+                    aria-label="הוסף טווח שעות נוסף">
+              + הוסף טווח
+            </button>
+            <button class="btn btn--accent btn--sm"
+                    type="button"
+                    id="btnRecalc"
+                    aria-label="חשב מחדש עם המסלול המותאם">
+              עדכן וחשב מחדש
+            </button>
+          </div>
+        </div>
+
+        <!-- Winner Banner -->
+        <div class="winner-banner" aria-live="polite">
+          <div class="winner-banner__inner">
+            <div class="winner-banner__badge" aria-hidden="true">
+              ✓ המסלול המשתלם ביותר
+            </div>
+            <div class="winner-banner__name" id="wName" role="heading" aria-level="2"></div>
+            <div class="winner-banner__stats">
+              <div class="stat-card">
+                <div class="stat-card__label">חיסכון שנתי משוער</div>
+                <div class="stat-card__value" id="wNis"></div>
+                <div class="stat-card__unit">שקלים</div>
+              </div>
+              <div class="stat-card">
+                <div class="stat-card__label">קוט"ש חסכון</div>
+                <div class="stat-card__value" id="wKwh"></div>
+                <div class="stat-card__unit">בתקופה שנבדקה</div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Chart -->
+        <div class="chart-section">
+          <div class="section-title" aria-hidden="true">השוואה גרפית</div>
+          <div class="chart-wrapper">
+            <canvas id="savingsChart" aria-label="גרף השוואת חיסכון בין מסלולים" role="img"></canvas>
+          </div>
+        </div>
+
+        <!-- Plans List -->
+        <div class="plans-section">
+          <div class="section-title" aria-hidden="true">דירוג מלא</div>
+          <div id="plansList" role="list" aria-label="רשימת מסלולים מדורגת לפי חיסכון"></div>
+        </div>
+
+        <!-- Footer -->
+        <div class="results-footer">
+          <p class="results-footer__note">
+            חישוב לפי תעריף ממוצע 0.60 ש"ח לקוט"ש כולל מע"מ.<br>
+            כל הנתונים מעובדים מקומית בדפדפן בלבד — לא נשלח דבר לשרת.
+          </p>
+          <button class="btn btn--ghost btn--sm"
+                  type="button"
+                  id="btnReset"
+                  aria-label="נקה ונתח קובץ אחר">
+            ↺ קובץ אחר
+          </button>
+        </div>
+
+      </section>
+    </div>
+
+    <!-- How It Works -->
+    <div class="how-card" role="region" aria-label="איך זה עובד">
+      <div class="section-title">איך זה עובד?</div>
+      <div class="how-steps" role="list">
+        <div class="how-step" role="listitem">
+          <div class="how-step__num" aria-hidden="true">1</div>
+          <div class="how-step__text">הורד קובץ CSV מחברת החשמל</div>
+        </div>
+        <div class="how-step" role="listitem">
+          <div class="how-step__num" aria-hidden="true">2</div>
+          <div class="how-step__text">העלה אותו לכאן לניתוח מקומי בדפדפן</div>
+        </div>
+        <div class="how-step" role="listitem">
+          <div class="how-step__num" aria-hidden="true">3</div>
+          <div class="how-step__text">קבל המלצה אישית מיידית + גרף השוואה</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ═══════════════════════════════════════════════════════════
+         GUIDE ACCORDION — Updated steps per requirements
+    ═══════════════════════════════════════════════════════════ -->
+    <div class="guide-card" role="region" aria-label="מדריך הורדת קובץ מחברת החשמל">
+      <button class="guide-toggle"
+              type="button"
+              id="guideToggle"
+              aria-expanded="false"
+              aria-controls="guideBody">
+        <div class="guide-toggle__left">
+          <div class="guide-toggle__icon-wrap" aria-hidden="true">📋</div>
+          <div>
+            <div class="guide-toggle__title">איך מורידים את קובץ הצריכה מחברת החשמל?</div>
+            <div class="guide-toggle__sub">מדריך שלב אחר שלב עם תמונות</div>
+          </div>
+        </div>
+        <span class="guide-toggle__chevron" aria-hidden="true">›</span>
+      </button>
+
+      <div class="guide-body" id="guideBody" role="region" aria-label="תוכן המדריך">
+        <div class="guide-step-list">
+
+          <!-- ═══ שלב 1 — כניסה לאתר (URL לחיץ) ═══ -->
+          <div class="guide-step">
+            <div class="guide-step__num" aria-hidden="true">1</div>
+            <div class="guide-step__body">
+              <div class="guide-step__title">כנס לאתר חברת החשמל</div>
+              <div class="guide-step__desc">גלוש לאתר חברת החשמל ולחץ על <strong>האזור האישי</strong> בפינה השמאלית העליונה</div>
+              <div class="guide-mockup">
+                <div class="mockup-bar">
+                  <div class="mockup-dot" style="background:#F87171"></div>
+                  <div class="mockup-dot" style="background:#FBBF24"></div>
+                  <div class="mockup-dot" style="background:#34D399"></div>
+                </div>
+                <a class="mockup-url" href="https://www.iec.co.il" target="_blank" rel="noopener noreferrer">https://www.iec.co.il ↗</a>
+                <div style="display:flex;justify-content:flex-end">
+                  <div class="mockup-btn">👤 האזור האישי</div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- ═══ שלב 2 — התחברות (ללא שינוי) ═══ -->
+          <div class="guide-step">
+            <div class="guide-step__num" aria-hidden="true">2</div>
+            <div class="guide-step__body">
+              <div class="guide-step__title">התחבר עם תעודת זהות</div>
+              <div class="guide-step__desc">בחר <strong>מספר תעודת זהות</strong>, הכנס את המספר ולחץ <strong>המשך</strong></div>
+              <div class="guide-mockup">
+                <div class="mockup-row mockup-row--active">🔵 מספר תעודת זהות</div>
+                <div class="mockup-row">⚪ מספר דרכון</div>
+                <div class="mockup-btn" style="margin-top:8px">המשך</div>
+              </div>
+            </div>
+          </div>
+
+          <!-- ═══ שלב 3 — חשבון חשמל → מצב הפעילות במונה ═══ -->
+          <div class="guide-step">
+            <div class="guide-step__num" aria-hidden="true">3</div>
+            <div class="guide-step__body">
+              <div class="guide-step__title">פתח: חשבון חשמל ← מצב הפעילות במונה</div>
+              <div class="guide-step__desc">בתפריט הצד לחץ על <strong>חשבון חשמל</strong> ואז בחר <strong>מצב הפעילות במונה</strong></div>
+              <div class="guide-mockup">
+                <div class="mockup-row">📄 חשבון חשמל ›</div>
+                <div style="padding-right:14px">
+                  <div class="mockup-row">תשלום לפי תעודת זהות</div>
+                  <div class="mockup-row mockup-row--active">📊 מצב הפעילות במונה</div>
+                  <div class="mockup-row">מחשבון מצב צריכה עדכני</div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- ═══ שלב 4 — מצב צריכה עדכני → לפי תקופה ═══ -->
+          <div class="guide-step">
+            <div class="guide-step__num" aria-hidden="true">4</div>
+            <div class="guide-step__body">
+              <div class="guide-step__title">לחץ על "מצב צריכה עדכני" ובחר "לפי תקופה"</div>
+              <div class="guide-step__desc">בעמוד שנפתח לחץ על <strong>מצב צריכה עדכני</strong> ואז בחר את הלשונית <strong>לפי תקופה</strong></div>
+              <div class="guide-mockup">
+                <div class="mockup-row mockup-row--active">⚡ מצב צריכה עדכני</div>
+                <div style="margin-top:var(--space-sm)">
+                  <div class="mockup-tab-row">
+                    <div class="mockup-tab mockup-tab--active">לפי תקופה</div>
+                    <div class="mockup-tab">תמונות מצב</div>
+                  </div>
+                  <div style="background:var(--surface);border-radius:var(--radius-sm);border:1px solid var(--border);padding:10px">
+                    <div style="font-size:10px;color:var(--text-muted);margin-bottom:4px">קוט"ש</div>
+                    <div class="mockup-chart-bars">
+                      <div class="mockup-bar-col" style="height:60%"></div>
+                      <div class="mockup-bar-col mockup-bar-col--hi" style="height:85%"></div>
+                      <div class="mockup-bar-col" style="height:55%"></div>
+                      <div class="mockup-bar-col mockup-bar-col--hi" style="height:90%"></div>
+                      <div class="mockup-bar-col" style="height:70%"></div>
+                      <div class="mockup-bar-col" style="height:48%"></div>
+                      <div class="mockup-bar-col mockup-bar-col--hi" style="height:80%"></div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- ═══ שלב 5 — שליחת קובץ אקסל מהשנתיים האחרונות ═══ -->
+          <div class="guide-step">
+            <div class="guide-step__num" aria-hidden="true">5</div>
+            <div class="guide-step__body">
+              <div class="guide-step__title">שלח קובץ אקסל עם נתוני צריכה למייל</div>
+              <div class="guide-step__desc">גלול למטה ולחץ על <strong>"שליחת קובץ אקסל עם נתוני צריכה מהשנתיים האחרונות למייל"</strong></div>
+              <div class="mockup-download">
+                <span>📧</span>
+                <span>שליחת קובץ אקסל עם נתוני צריכה מהשנתיים האחרונות למייל</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- ═══ שלב 6 — שמירה והעלאה (ללא שינוי) ═══ -->
+          <div class="guide-step">
+            <div class="guide-step__num" aria-hidden="true">6</div>
+            <div class="guide-step__body">
+              <div class="guide-step__title">שמור את הקובץ והעלה לכאן</div>
+              <div class="guide-step__desc">פתח את המייל מחברת החשמל, הורד את הקובץ המצורף (CSV / Excel) ועלה אותו לכאן</div>
+              <div class="mockup-download">
+                <span>✅</span>
+                <span>electricity_data.csv — מוכן להעלאה!</span>
+              </div>
+            </div>
+          </div>
+
+        </div>
+
+        <!-- TIP REMOVED per requirements -->
+
+      </div>
+    </div>
+
+  </main>
+
+  <!-- App Footer -->
+  <footer class="app-footer" role="contentinfo">
+    <p>כל החישובים מתבצעים מקומית — שום מידע לא נשלח לשרת</p>
+    <div class="security-badge" aria-label="האפליקציה מאובטחת — אין שליחת נתונים">
+      🔒 מאובטח — Private by design
+    </div>
+  </footer>
+
+  <script>
+  'use strict';
+
+  /* ─────────────────────────────────────────────────────────
+     SECURITY: XSS Sanitizer
+  ───────────────────────────────────────────────────────── */
+  function escapeHTML(str) {
+    if (typeof str !== 'string') return '';
+    return str
+      .replace(/&/g, '&amp;')
+      .replace(/</g, '&lt;')
+      .replace(/>/g, '&gt;')
+      .replace(/"/g, '&quot;')
+      .replace(/'/g, '&#x27;')
+      .replace(/\//g, '&#x2F;');
+  }
+
+  /* ─────────────────────────────────────────────────────────
+     SECURITY: Input validator for numeric discount fields
+  ───────────────────────────────────────────────────────── */
+  function validateDiscount(val) {
+    const n = parseFloat(val);
+    if (!isFinite(n) || isNaN(n)) return null;
+    if (n < 0 || n > 100) return null;
+    return n;
+  }
+
+  /* ─────────────────────────────────────────────────────────
+     SECURITY: Validate allowed day-type values (whitelist)
+  ───────────────────────────────────────────────────────── */
+  const ALLOWED_DAY_TYPES = new Set(['all', 'weekdays', 'weeknights']);
+  function validateDayType(val) {
+    return ALLOWED_DAY_TYPES.has(val) ? val : 'all';
+  }
+
+  /* ─────────────────────────────────────────────────────────
+     SECURITY: Validate time string format HH:MM
+  ───────────────────────────────────────────────────────── */
+  function validateTimeString(val) {
+    if (typeof val !== 'string') return '00:00';
+    return /^\d{2}:\d{2}$/.test(val) ? val : '00:00';
+  }
+
+  /* ─────────────────────────────────────────────────────────
+     CORE DATA — Business plans
+  ───────────────────────────────────────────────────────── */
+  const basePlans = [
+    {name:"אלקטרה SuperPower — לילה (21%)", rules:[{days:'weeknights',s:23,e:7,d:0.21}]},
+    {name:"בזק / הוט / פרטנר — לילה (20%)", rules:[{days:'weeknights',s:23,e:7,d:0.20}]},
+    {name:"סלקום — מסלול משפחה (18%)",      rules:[{days:'weekdays',s:14,e:20,d:0.18}]},
+    {name:"סלקום — חיסכון משתלם (17%)",     rules:[{days:'weekdays',s:7,e:17,d:0.17}]},
+    {name:"אלקטרה SuperPower — יום (16%)",  rules:[{days:'weekdays',s:7,e:17,d:0.16}]},
+    {name:"בזק / הוט / פרטנר — יום (15%)", rules:[{days:'weekdays',s:7,e:17,d:0.15}]},
+    {name:"אמישראגז / פזגז — עובדים מהבית (15%)", rules:[{days:'weekdays',s:7,e:17,d:0.15}]},
+    {name:"אמישראגז / בזק — קבוע (7%)",    rules:[{days:'all',s:0,e:24,d:0.07}]},
+    {name:"אלקטרה / סלקום / הוט — קבוע (6%)", rules:[{days:'all',s:0,e:24,d:0.06}]},
+    {name:"פזגז — חוסכים קבוע (5%)",       rules:[{days:'all',s:0,e:24,d:0.05}]}
+  ];
+
+  /* ─────────────────────────────────────────────────────────
+     STATE
+  ───────────────────────────────────────────────────────── */
+  let globalData = null;
+  let chartInstance = null;
+
+  /* ─────────────────────────────────────────────────────────
+     DOM REFERENCES
+  ───────────────────────────────────────────────────────── */
+  const dropZone   = document.getElementById('dropZone');
+  const fileInput  = document.getElementById('fileInput');
+  const pw         = document.getElementById('pw');
+  const pb         = document.getElementById('pb');
+  const analyzing  = document.getElementById('analyzing');
+  const uploadArea = document.getElementById('uploadArea');
+  const results    = document.getElementById('results');
+  const fname      = document.getElementById('fname');
+
+  /* ─────────────────────────────────────────────────────────
+     CUSTOM RULE ROW — Built with DOM API (no innerHTML)
+  ───────────────────────────────────────────────────────── */
+  function addCustomRuleRow(start, end, disc, daySelect) {
+    start = start || '23:00';
+    end = end || '07:00';
+    disc = (disc !== undefined && disc !== null) ? disc : '';
+    daySelect = daySelect || 'weeknights';
+
+    var container = document.getElementById('customRulesContainer');
+
+    var row = document.createElement('div');
+    row.className = 'rule-row';
+    row.setAttribute('role', 'listitem');
+
+    /* --- Discount field --- */
+    var fDisc = document.createElement('div');
+    fDisc.className = 'rule-row__field';
+    var lDisc = document.createElement('label');
+    lDisc.textContent = 'הנחה (%)';
+    var iDisc = document.createElement('input');
+    iDisc.type = 'number';
+    iDisc.className = 'c-disc';
+    iDisc.placeholder = "לדוג': 15";
+    iDisc.min = '0';
+    iDisc.max = '100';
+    iDisc.step = '0.1';
+    iDisc.addEventListener('input', function() {
+      var v = validateDiscount(iDisc.value);
+      iDisc.classList.toggle('input--invalid', v === null && iDisc.value !== '');
+    });
+    if (disc !== '') iDisc.value = String(disc);
+    fDisc.appendChild(lDisc);
+    fDisc.appendChild(iDisc);
+
+    /* --- Days field --- */
+    var fDays = document.createElement('div');
+    fDays.className = 'rule-row__field';
+    var lDays = document.createElement('label');
+    lDays.textContent = 'ימים';
+    var sDays = document.createElement('select');
+    sDays.className = 'c-days';
+    var dayOptions = [
+      {value:'all',       label:"כל השבוע"},
+      {value:'weekdays',  label:"ימים א'–ה'"},
+      {value:'weeknights',label:"לילות א'–ה'"}
+    ];
+    dayOptions.forEach(function(o) {
+      var opt = document.createElement('option');
+      opt.value = o.value;
+      opt.textContent = o.label;
+      if (o.value === daySelect) opt.selected = true;
+      sDays.appendChild(opt);
+    });
+    fDays.appendChild(lDays);
+    fDays.appendChild(sDays);
+
+    /* --- Start time --- */
+    var fStart = document.createElement('div');
+    fStart.className = 'rule-row__field';
+    var lStart = document.createElement('label');
+    lStart.textContent = 'משעה';
+    var iStart = document.createElement('input');
+    iStart.type = 'time';
+    iStart.className = 'c-start';
+    iStart.value = validateTimeString(start);
+    fStart.appendChild(lStart);
+    fStart.appendChild(iStart);
+
+    /* --- End time --- */
+    var fEnd = document.createElement('div');
+    fEnd.className = 'rule-row__field';
+    var lEnd = document.createElement('label');
+    lEnd.textContent = 'עד שעה';
+    var iEnd = document.createElement('input');
+    iEnd.type = 'time';
+    iEnd.className = 'c-end';
+    iEnd.value = validateTimeString(end);
+    fEnd.appendChild(lEnd);
+    fEnd.appendChild(iEnd);
+
+    /* --- Remove button --- */
+    var btnRemove = document.createElement('button');
+    btnRemove.type = 'button';
+    btnRemove.className = 'btn btn--ghost-danger';
+    btnRemove.textContent = '✕';
+    btnRemove.setAttribute('aria-label', 'הסר שורה זו');
+    btnRemove.addEventListener('click', function() { row.remove(); });
+
+    row.appendChild(fDisc);
+    row.appendChild(fDays);
+    row.appendChild(fStart);
+    row.appendChild(fEnd);
+    row.appendChild(btnRemove);
+    container.appendChild(row);
+  }
+
+  /* ─────────────────────────────────────────────────────────
+     INIT
+  ───────────────────────────────────────────────────────── */
+  document.addEventListener('DOMContentLoaded', function() {
+    addCustomRuleRow('23:00', '07:00', '', 'weeknights');
+
+    document.getElementById('btnAddRule').addEventListener('click', function() { addCustomRuleRow(); });
+    document.getElementById('btnRecalc').addEventListener('click', recalcCustom);
+    document.getElementById('btnReset').addEventListener('click', resetApp);
+    document.getElementById('guideToggle').addEventListener('click', toggleGuide);
+
+    dropZone.addEventListener('dragover', function(e) {
+      e.preventDefault();
+      dropZone.classList.add('drop-zone--over');
+    });
+    dropZone.addEventListener('dragleave', function() {
+      dropZone.classList.remove('drop-zone--over');
+    });
+    dropZone.addEventListener('drop', function(e) {
+      e.preventDefault();
+      dropZone.classList.remove('drop-zone--over');
+      var file = e.dataTransfer.files[0];
+      if (file) handleFile(file);
+    });
+
+    dropZone.addEventListener('keydown', function(e) {
+      if (e.key === 'Enter' || e.key === ' ') {
+        e.preventDefault();
+        fileInput.click();
+      }
+    });
+
+    fileInput.addEventListener('change', function(e) {
+      if (e.target.files[0]) handleFile(e.target.files[0]);
+    });
+  });
+
+  /* ─────────────────────────────────────────────────────────
+     SECURITY: File validation before parsing
+  ───────────────────────────────────────────────────────── */
+  function handleFile(file) {
+    var MAX_SIZE = 10 * 1024 * 1024; // 10MB
+
+    if (file.size > MAX_SIZE) {
+      alert('הקובץ גדול מדי. הגבלה: 10MB');
+      return;
+    }
+
+    var ext = file.name.split('.').pop().toLowerCase();
+    if (['csv', 'txt'].indexOf(ext) === -1) {
+      alert('יש להעלות קובץ CSV בלבד');
+      return;
+    }
+
+    fname.textContent = file.name;
+    fname.style.display = 'inline-flex';
+
+    pw.style.display = 'block';
+    analyzing.style.display = 'block';
+    pb.style.width = '20%';
+    setTimeout(function() { pb.style.width = '60%'; }, 200);
+
+    Papa.parse(file, {
+      complete: function(r) {
+        pb.style.width = '100%';
+        globalData = r.data;
+        setTimeout(function() {
+          pw.style.display = 'none';
+          analyzing.style.display = 'none';
+          uploadArea.style.display = 'none';
+          calc(globalData);
+        }, 400);
+      },
+      header: false,
+      skipEmptyLines: true
+    });
+  }
+
+  /* ─────────────────────────────────────────────────────────
+     RECALC CUSTOM
+  ───────────────────────────────────────────────────────── */
+  function recalcCustom() {
+    if (globalData) calc(globalData);
+  }
+
+  /* ─────────────────────────────────────────────────────────
+     HELPER: Time string → decimal hours
+  ───────────────────────────────────────────────────────── */
+  function timeToDecimal(timeStr) {
+    if (!timeStr) return 0;
+    var pts = timeStr.split(':');
+    return parseInt(pts[0], 10) + (parseInt(pts[1] || 0, 10) / 60);
+  }
+
+  /* ─────────────────────────────────────────────────────────
+     CALC — Core logic
+  ───────────────────────────────────────────────────────── */
+  function calc(data) {
+    var currentPlans = basePlans.map(function(p) {
+      return {
+        name: p.name,
+        isCustom: false,
+        rules: p.rules.map(function(r) { return {days:r.days, s:r.s, e:r.e, d:r.d}; })
+      };
+    });
+
+    var customRules = [];
+
+    document.querySelectorAll('.rule-row').forEach(function(row) {
+      var discEl  = row.querySelector('.c-disc');
+      var daysEl  = row.querySelector('.c-days');
+      var startEl = row.querySelector('.c-start');
+      var endEl   = row.querySelector('.c-end');
+
+      var cDisc = validateDiscount(discEl ? discEl.value : '');
+      var cDays = validateDayType(daysEl ? daysEl.value : 'all');
+      var cStartStr = validateTimeString(startEl ? startEl.value : '00:00');
+      var cEndStr   = validateTimeString(endEl   ? endEl.value   : '23:59');
+
+      if (cDisc !== null && cStartStr && cEndStr) {
+        var s = timeToDecimal(cStartStr);
+        var e = timeToDecimal(cEndStr);
+        if (e === 0 && s > 0) e = 24;
+        customRules.push({days: cDays, s: s, e: e, d: cDisc / 100});
+      }
+    });
+
+    if (customRules.length > 0) {
+      currentPlans.push({
+        name: 'ההצעה האישית המשולבת שלי',
+        isCustom: true,
+        rules: customRules
+      });
+    }
+
+    var ps = currentPlans.map(function(p) { return {name:p.name, isCustom:p.isCustom, rules:p.rules, saved:0}; });
+
+    data.forEach(function(row) {
+      if (row.length < 5) return;
+
+      var usageStr = String(row[4]).replace(/,/g, '').trim();
+      var u = parseFloat(usageStr);
+      if (!isFinite(u) || isNaN(u) || u < 0) return;
+
+      var pts = String(row[2]).split('/');
+      if (pts.length < 3) return;
+      var d = parseInt(pts[0], 10);
+      var m = parseInt(pts[1], 10);
+      var y = parseInt(pts[2], 10);
+      if (y < 100) y += 2000;
+
+      var timeParts = String(row[3]).split(':');
+      if (timeParts.length < 2) return;
+      var h = parseInt(timeParts[0], 10) + (parseInt(timeParts[1] || 0, 10) / 60);
+
+      if (isNaN(h) || isNaN(d) || isNaN(m) || isNaN(y)) return;
+
+      var dateObj = new Date(y, m - 1, d);
+      var dow = dateObj.getDay();
+
+      ps.forEach(function(p) {
+        p.rules.forEach(function(r) {
+          var match = false;
+          if (r.days === 'all') {
+            match = r.s < r.e ? (h >= r.s && h < r.e) : (h >= r.s || h < r.e);
+          } else if (r.days === 'weekdays') {
+            var isWeekday = (dow >= 0 && dow <= 4);
+            match = r.s < r.e
+              ? isWeekday && (h >= r.s && h < r.e)
+              : isWeekday && (h >= r.s || h < r.e);
+          } else if (r.days === 'weeknights') {
+            match = (dow >= 0 && dow <= 4 && h >= r.s) || (dow >= 1 && dow <= 5 && h < r.e);
+          }
+          if (match) p.saved += u * r.d;
+        });
+      });
+    });
+
+    ps.sort(function(a, b) { return b.saved - a.saved; });
+    showResults(ps);
+  }
+
+  /* ─────────────────────────────────────────────────────────
+     SHOW RESULTS
+  ───────────────────────────────────────────────────────── */
+  function showResults(ps) {
+    var best = ps[0];
+    var nisWinner = Math.round(best.saved * 0.60);
+    var kwhWinner = Math.round(best.saved);
+
+    document.getElementById('wName').textContent = best.name;
+    document.getElementById('wNis').textContent  = '₪' + nisWinner.toLocaleString('he-IL');
+    document.getElementById('wKwh').textContent  = kwhWinner.toLocaleString('he-IL');
+
+    var mx = best.saved || 1;
+    var list = document.getElementById('plansList');
+    list.innerHTML = '';
+
+    ps.forEach(function(p, i) {
+      var pct = Math.round((p.saved / mx) * 100);
+      var nis = Math.round(p.saved * 0.60);
+      var kwh = Math.round(p.saved);
+
+      var item = document.createElement('div');
+      item.className = 'plan-item' +
+        (i === 0    ? ' plan-item--winner' : '') +
+        (p.isCustom ? ' plan-item--custom'  : '');
+      item.setAttribute('role', 'listitem');
+
+      /* Rank badge */
+      var rank = document.createElement('div');
+      rank.className = 'plan-rank' + (i < 3 ? ' plan-rank--' + (i+1) : '');
+      rank.setAttribute('aria-label', 'מקום ' + (i+1));
+      rank.textContent = String(i + 1);
+
+      /* Plan info */
+      var info = document.createElement('div');
+      info.className = 'plan-info';
+
+      var nameEl = document.createElement('div');
+      nameEl.className = 'plan-name';
+      nameEl.textContent = p.name;
+      nameEl.title = p.name;
+
+      var track = document.createElement('div');
+      track.className = 'plan-bar-track';
+      var fill = document.createElement('div');
+      fill.className = 'plan-bar-fill' +
+        (i === 0    ? ' plan-bar-fill--winner' : '') +
+        (p.isCustom ? ' plan-bar-fill--custom'  : '');
+      fill.dataset.pct = String(pct);
+      fill.setAttribute('aria-valuenow', String(pct));
+      track.appendChild(fill);
+      info.appendChild(nameEl);
+      info.appendChild(track);
+
+      /* Savings */
+      var savingsEl = document.createElement('div');
+      savingsEl.className = 'plan-savings';
+      savingsEl.setAttribute('aria-label', 'חיסכון ₪' + nis.toLocaleString('he-IL'));
+
+      var nisEl = document.createElement('div');
+      nisEl.className = 'plan-savings__nis';
+      nisEl.textContent = '₪' + nis.toLocaleString('he-IL');
+
+      var kwhEl = document.createElement('div');
+      kwhEl.className = 'plan-savings__kwh';
+      kwhEl.textContent = kwh.toLocaleString('he-IL') + ' קוט"ש';
+
+      savingsEl.appendChild(nisEl);
+      savingsEl.appendChild(kwhEl);
+
+      item.appendChild(rank);
+      item.appendChild(info);
+      item.appendChild(savingsEl);
+      list.appendChild(item);
+    });
+
+    results.style.display = 'block';
+
+    /* Animate bars after paint */
+    requestAnimationFrame(function() {
+      document.querySelectorAll('.plan-bar-fill').forEach(function(b) {
+        b.style.width = b.dataset.pct + '%';
+      });
+    });
+
+    renderChart(ps);
+  }
+
+  /* ─────────────────────────────────────────────────────────
+     CHART — Chart.js horizontal bar chart
+  ───────────────────────────────────────────────────────── */
+  function renderChart(ps) {
+    var ctx = document.getElementById('savingsChart').getContext('2d');
+
+    if (chartInstance) { chartInstance.destroy(); }
+
+    var labels = ps.map(function(p) {
+      return p.name.length > 22 ? p.name.slice(0, 22) + '…' : p.name;
+    });
+
+    var values = ps.map(function(p) { return Math.round(p.saved * 0.60); });
+    var colors = ps.map(function(p, i) {
+      return p.isCustom ? '#FF9100' : i === 0 ? '#00C853' : '#0057FF';
+    });
+
+    chartInstance = new Chart(ctx, {
+      type: 'bar',
+      data: {
+        labels: labels,
+        datasets: [{
+          label: 'חיסכון משוער (₪)',
+          data: values,
+          backgroundColor: colors,
+          borderRadius: 6,
+          borderSkipped: false
+        }]
+      },
+      options: {
+        indexAxis: 'y',
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: {
+          legend: { display: false },
+          tooltip: {
+            callbacks: {
+              label: function(context) { return '₪' + context.raw.toLocaleString('he-IL'); }
+            },
+            rtl: true,
+            textDirection: 'rtl'
+          }
+        },
+        scales: {
+          x: {
+            grid: { color: '#E2E8F0' },
+            ticks: {
+              font: { family: 'Inter', size: 11 },
+              color: '#94A3B8',
+              callback: function(v) { return '₪' + v.toLocaleString('he-IL'); }
+            }
+          },
+          y: {
+            grid: { display: false },
+            ticks: {
+              font: { family: 'Inter', size: 11 },
+              color: '#475569'
+            }
+          }
+        },
+        animation: {
+          duration: 800,
+          easing: 'easeInOutQuart'
+        }
+      }
+    });
+  }
+
+  /* ─────────────────────────────────────────────────────────
+     RESET
+  ───────────────────────────────────────────────────────── */
+  function resetApp() {
+    uploadArea.style.display = 'block';
+    results.style.display    = 'none';
+    fname.textContent        = '';
+    fname.style.display      = 'none';
+    fileInput.value          = '';
+
+    globalData = null;
+    if (chartInstance) { chartInstance.destroy(); chartInstance = null; }
+  }
+
+  /* ─────────────────────────────────────────────────────────
+     GUIDE ACCORDION
+  ───────────────────────────────────────────────────────── */
+  function toggleGuide() {
+    var toggle = document.getElementById('guideToggle');
+    var body   = document.getElementById('guideBody');
+    var isOpen = toggle.getAttribute('aria-expanded') === 'true';
+    toggle.setAttribute('aria-expanded', String(!isOpen));
+    body.classList.toggle('guide-body--open', !isOpen);
+  }
+
+  </script>
+</body>
+</html>
+
+							<script>
+                            	
+							</script>
+                        </body>
+                        </html>
+                    
